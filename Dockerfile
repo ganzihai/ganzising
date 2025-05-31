@@ -22,19 +22,20 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
     && cp sing-box-*/sing-box /usr/local/bin/ \
     && rm -rf sing-box.tar.gz sing-box-*
 
-# 创建配置目录
-RUN mkdir -p /etc/singbox /etc/cloudflared
+# 创建配置目录和日志目录
+RUN mkdir -p /etc/singbox /etc/cloudflared /var/log
 
 # 生成凭证文件
 RUN echo "${TOKEN}" | base64 -d > /etc/cloudflared/creds.json \
     && chmod 600 /etc/cloudflared/creds.json
 
-# 精简后的 sing-box 配置
+# 精简但稳定的 sing-box 配置
 RUN cat <<EOF > /etc/singbox/config.json
 {
   "log": {
-    "level": "warn",  # 减少日志级别
-    "timestamp": true
+    "level": "error",  # 只记录错误
+    "timestamp": true,
+    "output": "/var/log/singbox.log"
   },
   "inbounds": [
     {
@@ -63,15 +64,14 @@ RUN cat <<EOF > /etc/singbox/config.json
 }
 EOF
 
-# 精简后的 cloudflared 配置
+# 稳定的 cloudflared 配置
 RUN TUNNEL_ID=$(echo "${TOKEN}" | base64 -d | jq -r '.t') \
     && cat <<EOF > /etc/cloudflared/config.yml
 tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/creds.json
 no-autoupdate: true
 protocol: http2
-# 最小化日志输出
-loglevel: error
+loglevel: warn  # 只记录警告和错误
 disable-quic: true
 disable-gre: true
 

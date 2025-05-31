@@ -29,5 +29,5 @@ EOF
 # 启动 cloudflared 隧道
 cloudflared tunnel --config /etc/cloudflared/config.yml run &
 
-# 启动 sing-box
+# 启动 sing-box (修复配置后)
 exec sing-box run -c /etc/singbox/config.json

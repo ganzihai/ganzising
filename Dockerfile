@@ -1,8 +1,8 @@
-# Dockerfile
+# 使用 Alpine 基础镜像
 FROM alpine:3.18
 
 # 安装依赖
-RUN apk add --no-cache curl jq bash
+RUN apk add --no-cache curl jq bash bind-tools
 
 # 设置固定参数
 ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" \
@@ -84,10 +84,6 @@ EOF
 # 复制启动脚本
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-
-# 设置DNS解析器（修复DNS问题）
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
-RUN echo "nameserver 1.1.1.1" >> /etc/resolv.conf
 
 # 设置入口点
 ENTRYPOINT ["/entrypoint.sh"]

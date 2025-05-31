@@ -1,8 +1,8 @@
-# Dockerfile
+# 使用 Alpine 基础镜像
 FROM alpine:3.18
 
 # 安装依赖
-RUN apk add --no-cache curl jq bash
+RUN apk add --no-cache curl jq bash bind-tools
 
 # 设置固定参数
 ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" \
@@ -26,16 +26,18 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
 # 创建配置目录
 RUN mkdir -p /etc/singbox /etc/cloudflared
 
-# 修复：正确生成 Cloudflare 凭证文件
+# 生成凭证文件
 RUN TOKEN_JSON=$(echo "${TOKEN}" | base64 -d) \
-    && echo "${TOKEN_JSON}" > /etc/cloudflared/creds.json
+    && echo "${TOKEN_JSON}" > /etc/cloudflared/creds.json \
+    && chmod 600 /etc/cloudflared/creds.json
 
 # 生成 sing-box 配置文件
 RUN cat <<EOF > /etc/singbox/config.json
 {
   "log": {
-    "level": "info",
-    "timestamp": true
+    "level": "debug",  # 增加日志级别
+    "timestamp": true,
+    "output": "/var/log/singbox.log"
   },
   "inbounds": [
     {
@@ -66,13 +68,15 @@ RUN cat <<EOF > /etc/singbox/config.json
 }
 EOF
 
-# 修复：正确生成 cloudflared 配置文件
+# 生成 cloudflared 配置文件
 RUN TUNNEL_ID=$(echo "${TOKEN}" | base64 -d | jq -r '.t') \
     && cat <<EOF > /etc/cloudflared/config.yml
 tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/creds.json
 no-autoupdate: true
 protocol: auto
+loglevel: debug  # 增加日志级别
+transport-loglevel: debug  # 增加传输日志级别
 
 ingress:
   - hostname: ${DOMAIN}
@@ -80,12 +84,13 @@ ingress:
   - service: http_status:404
 EOF
 
+# 复制增强的诊断脚本
+COPY diagnostic.sh /diagnostic.sh
+RUN chmod +x /diagnostic.sh
+
 # 复制启动脚本
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-
-# 修复：设置正确的权限
-RUN chmod 600 /etc/cloudflared/creds.json
 
 # 设置入口点
 ENTRYPOINT ["/entrypoint.sh"]

@@ -1,10 +1,10 @@
-# 使用 Alpine 基础镜像
+# Dockerfile
 FROM alpine:3.18
 
 # 安装依赖
 RUN apk add --no-cache curl jq bash bind-tools
 
-# 设置固定参数（使用新隧道信息）
+# 设置固定参数
 ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" \
     PORT="8001" \
     DOMAIN="cla.ganzi.fun" \
@@ -74,6 +74,11 @@ tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/creds.json
 no-autoupdate: true
 protocol: http2
+# 禁用不需要的功能
+disable-quic: true
+disable-gre: true
+# 增加日志级别
+loglevel: debug
 
 ingress:
   - hostname: ${DOMAIN}

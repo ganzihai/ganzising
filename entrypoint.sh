@@ -1,4 +1,5 @@
 #!/bin/bash
+# entrypoint.sh
 
 # 打印节点配置信息
 cat <<EOF
@@ -26,13 +27,22 @@ Clash 节点配置 (VMESS over WS + TLS)
 =======================================
 EOF
 
-# 运行诊断检查
-/diagnostic.sh
-
-# 启动 cloudflared 隧道（前台运行）
-echo "===== 启动 Cloudflared 隧道 ====="
-cloudflared tunnel --config /etc/cloudflared/config.yml run 2>&1 | awk '{print "[Cloudflared] " $0}' &
-
-# 启动 sing-box（前台运行）
+# 启动服务
 echo "===== 启动 Sing-box 服务 ====="
-exec sing-box run -c /etc/singbox/config.json 2>&1 | awk '{print "[Sing-box] " $0}'
+sing-box run -c /etc/singbox/config.json 2>&1 | awk '{print "[Sing-box] " $0}' &
+
+# 等待服务启动
+echo "等待 Sing-box 启动..."
+sleep 5
+
+# 检查服务状态
+echo "===== 服务状态检查 ====="
+netstat -tuln | awk '{print "[Status] " $0}'
+
+# 测试本地服务
+echo "测试本地服务:"
+curl -v http://localhost:${PORT} 2>&1 | awk '{print "[Test] " $0}'
+
+# 启动 cloudflared 隧道
+echo "===== 启动 Cloudflared 隧道 ====="
+cloudflared tunnel --config /etc/cloudflared/config.yml run 2>&1 | awk '{print "[Cloudflared] " $0}'

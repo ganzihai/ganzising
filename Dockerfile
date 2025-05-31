@@ -5,14 +5,22 @@ ARG SINGBOX_VERSION="1.9.2"
 # Install required tools
 RUN apk add --no-cache curl tar gzip
 
-# Download and install sing-box with debug output
+# Download and install sing-box with verbose debugging
 RUN set -x && \
-    curl -Lo sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-linux-amd64-slim.tar.gz" && \
-    tar -xvf sing-box.tar.gz && \
+    echo "Downloading sing-box version ${SINGBOX_VERSION}..." && \
+    DOWNLOAD_URL="https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-linux-amd64.tar.gz" && \
+    echo "Download URL: ${DOWNLOAD_URL}" && \
+    curl -L -v -o sing-box.tar.gz "${DOWNLOAD_URL}" && \
+    echo "Extracting archive..." && \
+    tar -tvf sing-box.tar.gz && \
+    tar -xzf sing-box.tar.gz && \
+    echo "Listing extracted contents:" && \
     ls -la && \
-    mv sing-box-*/sing-box /sing-box && \
+    echo "Moving sing-box binary..." && \
+    mv "sing-box-${SINGBOX_VERSION}-linux-amd64/sing-box" /sing-box && \
     chmod +x /sing-box && \
-    rm -rf sing-box.tar.gz sing-box-*
+    echo "Cleaning up..." && \
+    rm -rf sing-box.tar.gz "sing-box-${SINGBOX_VERSION}-linux-amd64"
 
 # Download and install cloudflared
 RUN curl -Lo /cloudflared "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64" && \

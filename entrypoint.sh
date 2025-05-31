@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# 设置可靠DNS（关键修复）
+# 设置可靠DNS
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
 echo "nameserver 1.1.1.1" >> /etc/resolv.conf
 
@@ -30,14 +30,11 @@ Clash 节点配置 (VMESS over WS + TLS)
 =======================================
 EOF
 
-# 启动服务（精简日志输出）
+# 启动服务
 sing-box run -c /etc/singbox/config.json > /dev/null 2>&1 &
 
-# 等待服务启动
-sleep 3
-
-# 启动 cloudflared 隧道（精简日志）
-cloudflared tunnel --config /etc/cloudflared/config.yml run > /dev/null 2>&1
+# 启动隧道（纯令牌模式）
+cloudflared tunnel --hostname ${DOMAIN} --url http://localhost:80 run --token ${TOKEN} > /dev/null 2>&1
 
 # 保持容器运行
 tail -f /dev/null

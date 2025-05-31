@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 解决DNS问题：在运行时设置DNS
+# 设置DNS
 echo "nameserver 8.8.8.8" > /tmp/resolv.conf
 echo "nameserver 1.1.1.1" >> /tmp/resolv.conf
 cat /tmp/resolv.conf > /etc/resolv.conf
@@ -38,14 +38,6 @@ sing-box run -c /etc/singbox/config.json 2>&1 | awk '{print "[Sing-box] " $0}' &
 # 等待服务启动
 echo "等待 Sing-box 启动..."
 sleep 5
-
-# 检查服务状态
-echo "===== 服务状态检查 ====="
-netstat -tuln | awk '{print "[Status] " $0}'
-
-# 测试本地服务
-echo "测试本地服务:"
-curl -v http://localhost:${PORT} 2>&1 | awk '{print "[Test] " $0}'
 
 # 启动 cloudflared 隧道
 echo "===== 启动 Cloudflared 隧道 ====="

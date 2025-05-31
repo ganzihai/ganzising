@@ -1,10 +1,9 @@
 
 #!/bin/bash
 
-# 设置DNS（静默执行）
-echo "nameserver 8.8.8.8" > /tmp/resolv.conf 2>/dev/null
-echo "nameserver 1.1.1.1" >> /tmp/resolv.conf 2>/dev/null
-cat /tmp/resolv.conf > /etc/resolv.conf 2>/dev/null
+echo "nameserver 8.8.8.8" > /tmp/resolv.conf
+echo "nameserver 1.1.1.1" >> /tmp/resolv.conf
+cat /tmp/resolv.conf > /etc/resolv.conf
 
 # 输出节点配置（唯一可见内容）
 cat <<EOF

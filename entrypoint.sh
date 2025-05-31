@@ -5,7 +5,7 @@ set -e
 SINGBOX_PORT="8001" # 内部 Sing-box 监听端口
 CLOUDFLARE_DOMAIN="cla.ganzi.fun"
 # 这个 UUID 必须与 sing-box-config.json 中的 users.uuid 严格一致
-VLESS_UUID="deadbeef-dead-beef-dead-beefdeadbeef" # 请替换成你 sing-box-config.json 中使用的 UUID
+VLESS_UUID="a1b2c3d4-e5f6-7890-1234-567890abcdef" # 请替换成你 sing-box-config.json 中使用的 UUID
 WS_PATH="/ws-path" # 必须与 sing-box-config.json 中的 transport.path 一致
 
 # --- Supervisor 和日志文件 ---

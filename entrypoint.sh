@@ -34,7 +34,7 @@ EOF
 
 # 启动服务
 echo "===== 启动 Sing-box 服务 ====="
-sing-box run -c /etc/singbox/config.json 2>&1 
+sing-box run -c /etc/singbox/config.json 2>&1 | awk '{print "[Sing-box] " $0}' &
 
 # 等待服务启动
 echo "等待 Sing-box 启动..."
@@ -43,4 +43,4 @@ sleep 5
 # 启动 cloudflared 隧道
 echo "===== 启动 Cloudflared 隧道 ====="
 # 使用环境变量方式传递令牌
-TUNNEL_TOKEN="${TOKEN}" cloudflared tunnel --config /etc/cloudflared/config.yml run 2>&1 
+TUNNEL_TOKEN="${TOKEN}" cloudflared tunnel --config /etc/cloudflared/config.yml run 2>&1 | awk '{print "[Cloudflared] " $0}'

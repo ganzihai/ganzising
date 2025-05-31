@@ -1,6 +1,10 @@
 #!/bin/sh
 
-# 打印节点配置信息（保留核心输出）
+# 设置可靠DNS（关键修复）
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+
+# 打印节点配置信息
 cat <<EOF
 =======================================
 Clash 节点配置 (VMESS over WS + TLS)

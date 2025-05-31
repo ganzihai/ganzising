@@ -1,4 +1,4 @@
-# 使用 Alpine 基础镜像
+# Dockerfile
 FROM alpine:3.18
 
 # 安装依赖
@@ -26,8 +26,9 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
 # 创建配置目录
 RUN mkdir -p /etc/singbox /etc/cloudflared
 
-# 修复：正确生成 cloudflared 凭证文件
-RUN echo "${TOKEN}" | base64 -d > /etc/cloudflared/creds.json
+# 修复：正确生成 Cloudflare 凭证文件
+RUN TOKEN_JSON=$(echo "${TOKEN}" | base64 -d) \
+    && echo "${TOKEN_JSON}" > /etc/cloudflared/creds.json
 
 # 生成 sing-box 配置文件
 RUN cat <<EOF > /etc/singbox/config.json
@@ -71,7 +72,7 @@ RUN TUNNEL_ID=$(echo "${TOKEN}" | base64 -d | jq -r '.t') \
 tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/creds.json
 no-autoupdate: true
-protocol: quic
+protocol: auto
 
 ingress:
   - hostname: ${DOMAIN}
@@ -82,6 +83,9 @@ EOF
 # 复制启动脚本
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# 修复：设置正确的权限
+RUN chmod 600 /etc/cloudflared/creds.json
 
 # 设置入口点
 ENTRYPOINT ["/entrypoint.sh"]

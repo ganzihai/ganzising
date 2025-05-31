@@ -1,4 +1,5 @@
 #!/bin/sh
+# entrypoint.sh
 
 # 设置DNS
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
@@ -30,25 +31,21 @@ Clash 节点配置 (VMESS over WS + TLS)
 =======================================
 EOF
 
-# 创建日志文件
-touch /var/log/cloudflared.log /var/log/singbox.log
-chmod 644 /var/log/*.log
-
-# 启动服务并监控
+# 启动服务
 start_service() {
     while true; do
-        # 启动服务并记录错误日志
-        "$@" >> "/var/log/$1.log" 2>&1
-        
-        # 如果服务退出，记录并重启
-        echo "[$(date)] Service $1 exited. Restarting..." >> "/var/log/$1.log"
+        echo "[$(date)] 启动 $1..."
+        $2
+        echo "[$(date)] $1 服务退出, 3秒后重启..."
         sleep 3
     done
 }
 
-# 后台启动服务监控
-start_service cloudflared tunnel --config /etc/cloudflared/config.yml run &
-start_service sing-box run -c /etc/singbox/config.json &
+# 启动 sing-box
+start_service "sing-box" "sing-box run -c /etc/singbox/config.json" &
 
-# 监控日志文件，显示关键错误
-tail -f /var/log/cloudflared.log | grep -E 'ERR|WARN|INF'
+# 启动 cloudflared（使用纯令牌方式）
+start_service "cloudflared" "cloudflared tunnel run --url http://localhost:${PORT} --hostname ${DOMAIN} --token ${TOKEN}" &
+
+# 监控日志
+tail -f /dev/null

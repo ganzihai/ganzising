@@ -27,6 +27,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/singbox-cf-tunnel:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/singbox-cf-tunnel:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/ganzi-sing:latest
           platforms: linux/amd64,linux/arm64

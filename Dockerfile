@@ -1,8 +1,8 @@
-# 使用 Alpine 基础镜像
+# Dockerfile
 FROM alpine:3.18
 
 # 安装依赖
-RUN apk add --no-cache curl jq bash bind-tools
+RUN apk add --no-cache curl jq bash
 
 # 设置固定参数
 ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" \
@@ -35,9 +35,8 @@ RUN TOKEN_JSON=$(echo "${TOKEN}" | base64 -d) \
 RUN cat <<EOF > /etc/singbox/config.json
 {
   "log": {
-    "level": "debug",  # 增加日志级别
-    "timestamp": true,
-    "output": "/var/log/singbox.log"
+    "level": "debug",
+    "timestamp": true
   },
   "inbounds": [
     {
@@ -74,9 +73,7 @@ RUN TUNNEL_ID=$(echo "${TOKEN}" | base64 -d | jq -r '.t') \
 tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/creds.json
 no-autoupdate: true
-protocol: auto
-loglevel: debug  # 增加日志级别
-transport-loglevel: debug  # 增加传输日志级别
+protocol: http2
 
 ingress:
   - hostname: ${DOMAIN}
@@ -84,13 +81,13 @@ ingress:
   - service: http_status:404
 EOF
 
-# 复制增强的诊断脚本
-COPY diagnostic.sh /diagnostic.sh
-RUN chmod +x /diagnostic.sh
-
 # 复制启动脚本
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# 设置DNS解析器（修复DNS问题）
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
+RUN echo "nameserver 1.1.1.1" >> /etc/resolv.conf
 
 # 设置入口点
 ENTRYPOINT ["/entrypoint.sh"]

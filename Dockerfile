@@ -5,11 +5,14 @@ ARG SINGBOX_VERSION="1.9.2"
 # Install required tools
 RUN apk add --no-cache curl tar gzip
 
-# Download and install sing-box
-RUN curl -Lo sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-linux-amd64-slim.tar.gz" && \
-    tar -xzf sing-box.tar.gz && \
-    mv "sing-box-${SINGBOX_VERSION}-linux-amd64-slim/sing-box" /sing-box && \
-    chmod +x /sing-box
+# Download and install sing-box with debug output
+RUN set -x && \
+    curl -Lo sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-linux-amd64-slim.tar.gz" && \
+    tar -xvf sing-box.tar.gz && \
+    ls -la && \
+    mv sing-box-*/sing-box /sing-box && \
+    chmod +x /sing-box && \
+    rm -rf sing-box.tar.gz sing-box-*
 
 # Download and install cloudflared
 RUN curl -Lo /cloudflared "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64" && \

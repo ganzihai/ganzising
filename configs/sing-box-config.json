@@ -13,7 +13,7 @@
         {
           // 你可以选择一个固定的 UUID，或者在 entrypoint.sh 中生成一个
           // 为了方便，这里硬编码一个。你可以用 `sing-box generate uuid` 生成
-          "uuid": "d342d11e-daaa-4639-a0a9-02608e4a1d5e", // 例如: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          "uuid": "a1b2c3d4-e5f6-7890-1234-567890abcdef", // 例如: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
           "flow": ""
         }
       ],

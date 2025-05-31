@@ -26,8 +26,13 @@ Clash 节点配置 (VMESS over WS + TLS)
 =======================================
 EOF
 
-# 修复：使用 nohup 启动 cloudflared 避免后台进程退出
-nohup cloudflared tunnel --config /etc/cloudflared/config.yml run > /tmp/cloudflared.log 2>&1 &
+# 运行诊断检查
+/diagnostic.sh
 
-# 启动 sing-box
-exec sing-box run -c /etc/singbox/config.json
+# 启动 cloudflared 隧道（前台运行）
+echo "===== 启动 Cloudflared 隧道 ====="
+cloudflared tunnel --config /etc/cloudflared/config.yml run 2>&1 | awk '{print "[Cloudflared] " $0}' &
+
+# 启动 sing-box（前台运行）
+echo "===== 启动 Sing-box 服务 ====="
+exec sing-box run -c /etc/singbox/config.json 2>&1 | awk '{print "[Sing-box] " $0}'

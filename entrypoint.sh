@@ -33,8 +33,11 @@ EOF
 # 启动服务
 sing-box run -c /etc/singbox/config.json > /dev/null 2>&1 &
 
-# 启动隧道（纯令牌模式）
-cloudflared tunnel --hostname ${DOMAIN} --url http://localhost:80 run --token ${TOKEN} > /dev/null 2>&1
+# 等待服务启动
+sleep 3
+
+# 使用纯令牌模式启动隧道
+cloudflared tunnel --hostname ${DOMAIN} --url http://localhost:${PORT} run --token ${TOKEN} > /dev/null 2>&1
 
 # 保持容器运行
 tail -f /dev/null

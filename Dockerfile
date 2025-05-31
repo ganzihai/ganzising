@@ -1,7 +1,7 @@
-# 使用 Alpine 基础镜像
+# Dockerfile
 FROM alpine:3.18
 
-# 安装最小依赖
+# 安装最小依赖（保留基本工具）
 RUN apk add --no-cache curl jq
 
 # 设置固定参数
@@ -34,7 +34,7 @@ RUN echo "${TOKEN}" | base64 -d > /etc/cloudflared/creds.json \
 RUN cat <<EOF > /etc/singbox/config.json
 {
   "log": {
-    "level": "error",  # 减少日志级别
+    "level": "error",
     "timestamp": false
   },
   "inbounds": [
@@ -71,7 +71,7 @@ tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/creds.json
 no-autoupdate: true
 protocol: http2
-loglevel: error  # 减少日志级别
+loglevel: error
 disable-update: true
 
 ingress:
@@ -80,7 +80,7 @@ ingress:
   - service: http_status:404
 EOF
 
-# 复制精简的启动脚本
+# 复制启动脚本
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

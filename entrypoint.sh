@@ -5,7 +5,7 @@ echo "nameserver 8.8.8.8" > /tmp/resolv.conf
 echo "nameserver 1.1.1.1" >> /tmp/resolv.conf
 cat /tmp/resolv.conf > /etc/resolv.conf
 
-# 打印节点配置信息
+# 打印节点配置信息（使用新域名）
 cat <<EOF
 =======================================
 Clash 节点配置 (VMESS over WS + TLS)
@@ -38,6 +38,10 @@ sing-box run -c /etc/singbox/config.json 2>&1 | awk '{print "[Sing-box] " $0}' &
 # 等待服务启动
 echo "等待 Sing-box 启动..."
 sleep 5
+
+# 验证凭证
+echo "===== 验证 Cloudflare 凭证 ====="
+cloudflared tunnel --credentials-file /etc/cloudflared/creds.json list 2>&1 | awk '{print "[Verify] " $0}'
 
 # 启动 cloudflared 隧道
 echo "===== 启动 Cloudflared 隧道 ====="

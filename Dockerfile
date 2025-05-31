@@ -1,65 +1,50 @@
-# 使用 Alpine 基础镜像
-FROM alpine:3.18
+FROM alpine:latest
 
-# 安装最小依赖
-RUN apk add --no-cache curl
+# --- ARGs for versions (optional, but good practice) ---
+ARG SINGBOX_VERSION="1.9.2" # 查阅 https://github.com/SagerNet/sing-box/releases 获取最新稳定版
+ARG CLOUDFLARED_VERSION="latest" # 或者指定版本如 2023.10.0
 
-# 设置固定参数（注意：使用单行环境变量定义避免语法错误）
-ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" PORT="80" DOMAIN="cla.ganzi.fun" TOKEN="eyJhIjoiNmU4NGY2ODhiZmUwNjI4MzQ0NzAwNzBhMmQ5NDZiZTUiLCJ0IjoiZTY2NTFlZWYtNWQ2ZC00NDM0LWJlNWEtMmY2MTMzYjhiOGZmIiwicyI6Ik4yVmpNR1JqWVRRdE9UVmpZeTAwTnpoaExUbGhORFV0WW1GaU5qUmpPV0UxTjJRMyJ9"
+# --- Environment Variables ---
+ENV SINGBOX_PATH /usr/local/bin/sing-box
+ENV CLOUDFLARED_PATH /usr/local/bin/cloudflared
+ENV SUPERVISOR_CONF_PATH /etc/supervisord.conf
+ENV SINGBOX_CONF_DIR /etc/sing-box
 
-# 安装 cloudflared
-RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
-    && curl -L -o /usr/local/bin/cloudflared "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH}" \
-    && chmod +x /usr/local/bin/cloudflared
+# --- Install Dependencies ---
+RUN apk add --no-cache \
+    curl \
+    tar \
+    gzip \
+    supervisor \
+    ca-certificates \
+    tzdata # For correct timezone in logs
 
-# 安装 sing-box
-RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
-    && LATEST_VERSION=$(curl -sL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') \
-    && curl -Lo sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/download/${LATEST_VERSION}/sing-box-${LATEST_VERSION#v}-linux-${ARCH}.tar.gz" \
-    && tar -xzf sing-box.tar.gz \
-    && cp sing-box-*/sing-box /usr/local/bin/ \
-    && rm -rf sing-box.tar.gz sing-box-*
+# --- Install Sing-box ---
+RUN curl -Lo sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-linux-amd64.tar.gz" && \
+    tar -xzf sing-box.tar.gz && \
+    mv "sing-box-${SINGBOX_VERSION}-linux-amd64/sing-box" "${SINGBOX_PATH}" && \
+    rm -rf sing-box.tar.gz "sing-box-${SINGBOX_VERSION}-linux-amd64" && \
+    chmod +x "${SINGBOX_PATH}"
 
-# 创建配置目录
-RUN mkdir -p /etc/singbox
+# --- Install Cloudflared ---
+RUN curl -Lo "${CLOUDFLARED_PATH}" "https://github.com/cloudflare/cloudflared/releases/${CLOUDFLARED_VERSION}/download/cloudflared-linux-amd64" && \
+    chmod +x "${CLOUDFLARED_PATH}"
 
-# 生成精简的 sing-box 配置
-RUN cat <<EOF > /etc/singbox/config.json
-{
-  "log": {
-    "level": "error",
-    "timestamp": false
-  },
-  "inbounds": [
-    {
-      "type": "vmess",
-      "tag": "vmess-in",
-      "listen": "0.0.0.0",
-      "listen_port": ${PORT},
-      "users": [
-        {
-          "uuid": "${UUID}",
-          "alterId": 0
-        }
-      ],
-      "transport": {
-        "type": "ws",
-        "path": "/vpath"
-      }
-    }
-  ],
-  "outbounds": [
-    {
-      "type": "direct",
-      "tag": "direct"
-    }
-  ]
-}
-EOF
+# --- Create directories and copy configurations ---
+RUN mkdir -p "${SINGBOX_CONF_DIR}" /var/log/supervisor
 
-# 复制启动脚本
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY configs/sing-box-config.json "${SINGBOX_CONF_DIR}/config.json"
+COPY configs/supervisord.conf "${SUPERVISOR_CONF_PATH}"
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# 设置入口点
-ENTRYPOINT ["/entrypoint.sh"]
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Healthcheck (Optional but recommended)
+# Cloudflared has a health check endpoint, Sing-box would need a specific inbound for it
+# For simplicity, we'll skip a detailed healthcheck for now.
+
+# --- Set entrypoint ---
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Expose the internal Sing-box port (for documentation, not strictly needed for Cloudflare Tunnel)
+EXPOSE 8001

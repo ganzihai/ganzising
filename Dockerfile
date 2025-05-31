@@ -4,11 +4,8 @@ FROM alpine:3.18
 # 安装最小依赖
 RUN apk add --no-cache curl
 
-# 设置固定参数
-ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" \
-    PORT="80" \  # 使用标准端口
-    DOMAIN="cla.ganzi.fun" \
-    TOKEN="eyJhIjoiNmU4NGY2ODhiZmUwNjI4MzQ0NzAwNzBhMmQ5NDZiZTUiLCJ0IjoiZTY2NTFlZWYtNWQ2ZC00NDM0LWJlNWEtMmY2MTMzYjhiOGZmIiwicyI6Ik4yVmpNR1JqWVRRdE9UVmpZeTAwTnpoaExUbGhORFV0WW1GaU5qUmpPV0UxTjJRMyJ9"
+# 设置固定参数（注意：使用单行环境变量定义避免语法错误）
+ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" PORT="80" DOMAIN="cla.ganzi.fun" TOKEN="eyJhIjoiNmU4NGY2ODhiZmUwNjI4MzQ0NzAwNzBhMmQ5NDZiZTUiLCJ0IjoiZTY2NTFlZWYtNWQ2ZC00NDM0LWJlNWEtMmY2MTMzYjhiOGZmIiwicyI6Ik4yVmpNR1JqWVRRdE9UVmpZeTAwTnpoaExUbGhORFV0WW1GaU5qUmpPV0UxTjJRMyJ9"
 
 # 安装 cloudflared
 RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \

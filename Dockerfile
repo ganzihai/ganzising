@@ -4,11 +4,11 @@ FROM alpine:3.18
 # 安装依赖
 RUN apk add --no-cache curl jq bash bind-tools
 
-# 设置固定参数
+# 设置固定参数（使用新隧道信息）
 ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" \
     PORT="8001" \
-    DOMAIN="claw.ganzi.fun" \
-    TOKEN="eyJhIjoiNmU4NGY2ODhiZmUwNjI4MzQ0NzAwNzBhMmQ5NDZiZTUiLCJ0IjoiNWNiOTFhYTEtNWUzYy00ZTlkLWJlNzgtNTY0NTRmMDFkMzE1IiwicyI6Ik9XTmpPV1pqT0RBdE0yUmlZaTAwTW1NekxXSXlObVF0TTJFd05USXlaVFV4TUdNeiJ9"
+    DOMAIN="cla.ganzi.fun" \
+    TOKEN="eyJhIjoiNmU4NGY2ODhiZmUwNjI4MzQ0NzAwNzBhMmQ5NDZiZTUiLCJ0IjoiZTY2NTFlZWYtNWQ2ZC00NDM0LWJlNWEtMmY2MTMzYjhiOGZmIiwicyI6Ik4yVmpNR1JqWVRRdE9UVmpZeTAwTnpoaExUbGhORFV0WW1GaU5qUmpPV0UxTjJRMyJ9"
 
 # 安装 cloudflared
 RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
@@ -30,9 +30,6 @@ RUN mkdir -p /etc/singbox /etc/cloudflared
 RUN TOKEN_JSON=$(echo "${TOKEN}" | base64 -d) \
     && echo "${TOKEN_JSON}" > /etc/cloudflared/creds.json \
     && chmod 600 /etc/cloudflared/creds.json
-
-# 验证凭证文件（修复语法错误）
-RUN cloudflared tunnel --credentials-file /etc/cloudflared/creds.json list
 
 # 生成 sing-box 配置文件
 RUN cat <<EOF > /etc/singbox/config.json

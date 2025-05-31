@@ -26,10 +26,10 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
 # 创建配置目录
 RUN mkdir -p /etc/singbox /etc/cloudflared
 
-# 写入 cloudflared 凭证
+# 修复：正确生成 cloudflared 凭证文件
 RUN echo "${TOKEN}" | base64 -d > /etc/cloudflared/creds.json
 
-# 修复：使用 listen_port 替代 port
+# 生成 sing-box 配置文件
 RUN cat <<EOF > /etc/singbox/config.json
 {
   "log": {
@@ -41,7 +41,7 @@ RUN cat <<EOF > /etc/singbox/config.json
       "type": "vmess",
       "tag": "vmess-in",
       "listen": "0.0.0.0",
-      "listen_port": ${PORT},  # 修复此处字段名
+      "listen_port": ${PORT},
       "sniff": true,
       "sniff_override_destination": true,
       "users": [
@@ -65,10 +65,13 @@ RUN cat <<EOF > /etc/singbox/config.json
 }
 EOF
 
-# 生成 cloudflared 配置文件
-RUN cat <<EOF > /etc/cloudflared/config.yml
-tunnel: $(echo ${TOKEN} | base64 -d | jq -r .t)
+# 修复：正确生成 cloudflared 配置文件
+RUN TUNNEL_ID=$(echo "${TOKEN}" | base64 -d | jq -r '.t') \
+    && cat <<EOF > /etc/cloudflared/config.yml
+tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/creds.json
+no-autoupdate: true
+protocol: quic
 
 ingress:
   - hostname: ${DOMAIN}

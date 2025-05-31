@@ -1,5 +1,9 @@
 #!/bin/bash
-# entrypoint.sh
+
+# 解决DNS问题：在运行时设置DNS
+echo "nameserver 8.8.8.8" > /tmp/resolv.conf
+echo "nameserver 1.1.1.1" >> /tmp/resolv.conf
+cat /tmp/resolv.conf > /etc/resolv.conf
 
 # 打印节点配置信息
 cat <<EOF

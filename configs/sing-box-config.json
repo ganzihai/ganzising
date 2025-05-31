@@ -1,0 +1,32 @@
+{
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "inbounds": [
+    {
+      "type": "vless",
+      "tag": "vless-in",
+      "listen": "0.0.0.0",
+      "listen_port": 8001,
+      "users": [
+        {
+          // 你可以选择一个固定的 UUID，或者在 entrypoint.sh 中生成一个
+          // 为了方便，这里硬编码一个。你可以用 `sing-box generate uuid` 生成
+          "uuid": "your-chosen-uuid-here", // 例如: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          "flow": ""
+        }
+      ],
+      "transport": {
+        "type": "ws",
+        "path": "/ws-path" // 和Clash配置中的路径保持一致
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct-out"
+    }
+  ]
+}

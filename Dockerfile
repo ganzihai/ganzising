@@ -1,7 +1,8 @@
+# Dockerfile
 FROM alpine:3.18
 
-# 安装最小依赖
-RUN apk add --no-cache curl jq
+# 安装依赖
+RUN apk add --no-cache curl jq bash bind-tools
 
 # 设置固定参数
 ENV UUID="d342d11e-daaa-4639-a0a9-02608e4a1d5e" \
@@ -23,13 +24,18 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
     && rm -rf sing-box.tar.gz sing-box-*
 
 # 创建配置目录
-RUN mkdir -p /etc/singbox
+RUN mkdir -p /etc/singbox /etc/cloudflared
 
-# 精简的 sing-box 配置
+# 生成凭证文件
+RUN TOKEN_JSON=$(echo "${TOKEN}" | base64 -d) \
+    && echo "${TOKEN_JSON}" > /etc/cloudflared/creds.json \
+    && chmod 600 /etc/cloudflared/creds.json
+
+# 生成 sing-box 配置文件
 RUN cat <<EOF > /etc/singbox/config.json
 {
   "log": {
-    "level": "error",
+    "level": "debug",
     "timestamp": true
   },
   "inbounds": [
@@ -38,6 +44,8 @@ RUN cat <<EOF > /etc/singbox/config.json
       "tag": "vmess-in",
       "listen": "0.0.0.0",
       "listen_port": ${PORT},
+      "sniff": true,
+      "sniff_override_destination": true,
       "users": [
         {
           "uuid": "${UUID}",
@@ -57,6 +65,25 @@ RUN cat <<EOF > /etc/singbox/config.json
     }
   ]
 }
+EOF
+
+# 生成 cloudflared 配置文件
+RUN TUNNEL_ID=$(echo "${TOKEN}" | base64 -d | jq -r '.t') \
+    && cat <<EOF > /etc/cloudflared/config.yml
+tunnel: ${TUNNEL_ID}
+credentials-file: /etc/cloudflared/creds.json
+no-autoupdate: true
+protocol: http2
+# 禁用不需要的功能
+disable-quic: true
+disable-gre: true
+# 增加日志级别
+loglevel: debug
+
+ingress:
+  - hostname: ${DOMAIN}
+    service: http://localhost:${PORT}
+  - service: http_status:404
 EOF
 
 # 复制启动脚本

@@ -29,7 +29,7 @@ RUN mkdir -p /etc/singbox /etc/cloudflared
 # 写入 cloudflared 凭证
 RUN echo "${TOKEN}" | base64 -d > /etc/cloudflared/creds.json
 
-# 生成 sing-box 配置文件
+# 修复：使用 listen_port 替代 port
 RUN cat <<EOF > /etc/singbox/config.json
 {
   "log": {
@@ -41,7 +41,7 @@ RUN cat <<EOF > /etc/singbox/config.json
       "type": "vmess",
       "tag": "vmess-in",
       "listen": "0.0.0.0",
-      "port": ${PORT},
+      "listen_port": ${PORT},  # 修复此处字段名
       "sniff": true,
       "sniff_override_destination": true,
       "users": [
